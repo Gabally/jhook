@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="static/dark.css">
+    <link rel="stylesheet" href="static/main.css">
+    <title>Login</title>
+</head>
+<body>
+    <form action="" method="post">
+        <input type="password" name="password" placeholder="🔐" id="">
+        <button>Login</button>
+        {% with errors = get_flashed_messages(category_filter=["err"]) %}
+        {% if errors %}
+        <div class="error">
+            {%- for msg in errors %}
+            <div>{{ msg }}</div>
+            {% endfor -%}
+        </div>
+        {% endif %}
+        {% endwith %}
+    </form>
+</body>
+</html>

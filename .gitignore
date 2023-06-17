@@ -1,0 +1,8 @@
+env
+__pycache__
+instance
+*.db
+**content**
+**testxss**
+build
+jhook.egg-info

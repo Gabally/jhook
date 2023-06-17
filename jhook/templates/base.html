@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/dark.css">
+    <link rel="stylesheet" href="/static/main.css">
+    <title>{% block title %} {% endblock %} | JHook 🪝</title>
+</head>
+<body>
+    <div class="bar">
+        <div>
+            <button onclick="window.location ='{{  url_for('hooks') }}'">
+                🎣 Hooks
+            </button>
+        </div>
+        <div>
+            <button onclick="window.location ='{{  url_for('telegram_notifications_pending') }}'">
+                💬 Telegram Notifications
+            </button>
+        </div>
+        <div>
+            <button onclick="window.location ='{{  url_for('change_password') }}'">
+                🔒 Change Password
+            </button>
+        </div>
+        <div>
+            <button onclick="window.location ='{{  url_for('logout') }}'">
+                🚪 Logout
+            </button>
+        </div>
+    </div>
+    {% block content %} {% endblock %}
+</body>
+</html>

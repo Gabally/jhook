@@ -1,0 +1,3 @@
+graft jhook/static
+graft jhook/templates
+global-exclude *.pyc

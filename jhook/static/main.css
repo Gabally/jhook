@@ -1,0 +1,100 @@
+form {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.error {
+    color: rgb(194, 31, 31);
+    font-weight: bold;
+}
+
+.bar {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    flex-direction: row;
+}
+
+.center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.to-right {
+    display: flex;
+    justify-content: right;
+    align-items: center;
+    flex-direction: row;
+}
+
+.checkbox {
+    margin: 10px;
+}
+
+.link-list {
+    background: var(--background);
+    height: 150px;
+    overflow-y: scroll;
+    border-radius: 3px;
+}
+
+.link-list > div {
+    margin: 3px;
+    border-bottom: 2px solid rgba(139, 137, 137, 0.274);
+}
+
+.tg-selector {
+    width: 100%;
+    margin: 10px;
+}
+
+.hook-view {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    flex-direction: row;
+}
+
+.hook-section {
+    width: 100%;
+}
+
+details {
+    margin-top: 0px;
+}
+
+#console-list > button {
+    width: 70%;
+}
+
+.req-method {
+    background: rgba(106, 187, 112, 0.315);
+    padding: 3px;
+    border-radius: 3px;
+    margin-right: 5px;
+}
+
+code {
+    white-space: pre-line;
+}
+
+iframe {
+    background: white;
+    width: 100%;
+}
+
+#editor {
+    width: 80%;
+    height: 300px;
+}
+
+menu {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-left: 0px;
+}

@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Telegram Notifications
+{% endblock %}
+
+{% block content %}
+<div class="center">
+    <select name="type" id="user-type">
+        <option value="current">Current</option>
+        <option value="pending">Pending</option>
+        <option value="blocked">Blocked</option>
+    </select>
+</div>
+<table>
+    <thead>
+        <th>Username</th>
+        <th></th>
+    </thead>
+    <tbody>
+        {% for u in users %}
+        <tr>
+            <td>{{ u.name }}</td>
+            <td>
+                <button onclick="approve({{ u.id }}, true)">✔️</button>
+                <button onclick="approve({{ u.id }}, false)">❌</button>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<script>
+    async function approve(id, approved) {
+        let selected = "{{ selected }}";
+        let r = null;
+        if ((selected === "blocked" || selected == "current") && !approved) {
+            r = await fetch(`/telegram-users/${id}`, {
+                method: "DELETE"
+            });
+        } else {
+            r = await fetch("/bot-requests/approve", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    id: id,
+                    approved: approved
+                })
+            });
+        }
+        if (r.status !== 200) {
+            alert(`An error occurred while sending approval (code ${r.status})`);
+        } else {
+            window.location.reload();
+        }
+    }
+    window.addEventListener("DOMContentLoaded", () => {
+        let selectedCategory = "{{ selected }}";
+        document.querySelector(`[value="${selectedCategory}"]`).selected = true;
+        let types = document.getElementById("user-type");
+        types.addEventListener("change", () => {
+            switch (types.value) {
+                case "current":
+                    window.location.href = "{{  url_for('telegram_notifications_current') }}";
+                    break;
+                case "pending":
+                    window.location.href = "{{  url_for('telegram_notifications_pending') }}";
+                    break;   
+                case "blocked":
+                    window.location.href = "{{  url_for('telegram_notifications_blocked') }}";
+                    break; 
+            };
+        });
+    });
+</script>
+{% endblock %}
